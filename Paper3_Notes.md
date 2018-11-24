@@ -93,3 +93,55 @@ A pending invocation of a totally-defined operation is never required to wait fo
 
 **Proof**  Let $S$ be any linearization of $H$. If $S$ includes a response $<x \space res \ space P>$ to $<x \space inv \space P>$ $S$ is also a linearization of $H \cdot <x \space res \space P>$. Otherwise $<x \space inv \space P>$does not appear in $S$ either since linearization by definition does not include pending invocations. As the operation is total, there exists a response $<x \space res \space P>$ such that $S' = S \cdot <x \space inv \space P> \cdot <x \space res \space P>$ is a legal linearization. However, $S'$ is a linearization of $H \cdot <x \space res \space P>$ and hence is a linearization of $H$.  $\square$
 
+The result is that linearizability does not force a process with a pending invocation of a total operation to block.  Blocking/deadlock may occur still occur as a result of how linearizability is implemented. Furthermore, it does not prevent blocking it situations it is intended. The most natural concurrent interpretation of the partial sequential specification is t simply wait until the object reaches a defined state for the given operation. 
+
+ ### Comparison to Other Correctness Conditions
+
+Sequential consistency (as defined by Lamport) requires a history to be equivalent to a legal sequential history. Sequential consistency is weaker than linearizability, because it does not require the original history's precedence ordering to be preserved.  Furthermore sequential consistency is not a local property.  
+
+In serializability, a transaction is a thread of control that applies a finite sequence of primitive ops to set of objects shared with other transactions. A history is serializable if it is equivalent to one in which the transactions appear to execute sequentially without interleaving. A partial precedence order can be defined over non-overlapping transactions.  A history is strictly-serializable if the order of the transactions in the sequential history is compatible with their precedence order.  It can be enforced by different synchronization mechanisms. 
+
+Linearization can be viewed as a special case of strict serializability where transactions are restricted to consist of a single operation applied to an object.  Concurrency mechanisms that work for strict serializability  are not usually appropriate for linearizability.  Serializability (strict or otherwise) is not a local property.  Serializability is a blocking property. Special mechanisms used to roll back and restart transactions are needed to handle the blocking cases.  Linearization and serialization are used for different problem domains: 
+
+* Serialization is used to allow programmers to reason about concurrency at serial applications.
+* Linearizability is intended for applications where concurrency is of primary interest and programmers are willing to apply special-purpose synchronization protocols. 
+
+## Verifying that Implementation are Linearizable
+
+### Definition of Correctness
+
+An implementation is a set of histories in which events of two objects, a representation object and abstract object (of type *rep* and *abs* respectively) are interleaved in  a constrained way. For each history $H$:
+
+* the subhistories $H \mid rep$, and $H \mid abs$  satisfy the usual well-formedness conditions
+* the processes $P$, each rep operation in $H \mid P$ lies within an abstract operation in $H \mid P$
+
+An abstract operation is implemented by a sequence of rep operations that occur within it.  An implementation is correct with respect to the specification of *abs* if for every history $H$ in the implementation, $H \mid \it{abs}$ is linearizable. 
+
+### Representation and Abstraction Fucntion
+
+The subset of *rep* values that are legal are characterized by the rep invariant, $I : \it{rep} \rightarrow \it{bool}$ . The meaning of the legal representation is given by $A : \it{rep} \rightarrow \it{abs}$ the abstraction function. An abstract operation $\alpha$ is implemented by a sequence $\rho$  if rep operations that carries the representation from one legal variable to another, passing potentially though intermediate values where the abstract function is undefined. The rep invariant is part of the pre/post condition of every operation implementation.  An implementation of an abstract op $\alpha$ is correct if there exists a rep invariant $I$ and an abstraction function $A$ such that whenever $\rho$ carries one legal rep $r$ to another $r'$, $\alpha$ carries the value from $A(r)$ to $A(r')$. 
+
+Concurrent objects, if allowed may have operations in progress continually and under these circumstances cannot assume that between operations it will assume a meaningful value, the rep invariant needs to be preserved by each rep operation in  the sequence implementing the abstract op. 
+
+Defining an abstraction function can be difficult, ones where the operation 'takes effect' immediately fail due to the issues caused from linearization order depending on race conditions. The abstraction function is instead defined by mapping a rep value to a set of abstract values that represent the possible linearizations permitted, these can be fine-tuned depending on the level of concurrency (smaller set = less concurrency).  
+
+### Verification Method
+
+#### Linearizaed Values
+
+The value at the end of a linearized history is a linearized value. An object can have more then one linearized value at the end of a given history. *Lin(H)* gives all the linearized values of $H$. 
+
+#### Proof Method
+
+The verification technique for sequential implementations is generalized: 
+
+Assume the implementation of $r$ is correct, thus $H \mid \it{rep}$ is linearizable for all $H$ in the implementation. Show the following property: $\forall r \in \it{Lin}(H \mid \it{rep})$, $I(r)$ holds and $A(r) \subseteq \it{Lin}(H \mid \it{abs})$. This implies $\it{Lin}(H \mid \it{abs})$ is nonempty and thus linearizable. 
+
+It is possible to linearized *abs* values with no corresponding *rep* values. 
+
+#### Critical Sections
+
+If an object's implementation includes critical sections, it may not be possible to define a continuous abstract function, the rep invariant may be violated in the critical section. Hidden data is used to overcome this, using an extended representation as the abstraction function's domain to overcome this.  This can be done by retaining lost data temporarily in auxiliary variables, after which the above proof method can be used. 
+
+## Reasoning About Linearizable Objects
+
