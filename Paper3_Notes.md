@@ -143,5 +143,43 @@ It is possible to linearized *abs* values with no corresponding *rep* values.
 
 If an object's implementation includes critical sections, it may not be possible to define a continuous abstract function, the rep invariant may be violated in the critical section. Hidden data is used to overcome this, using an extended representation as the abstraction function's domain to overcome this.  This can be done by retaining lost data temporarily in auxiliary variables, after which the above proof method can be used. 
 
-## Reasoning About Linearizable Objects
+## Proofs of Correctness
+
+### Possibilities and Linearized Values
+
+Possibilities for a history are a triple $<v,P,R>$ where $v$ is a linearized value of $H$. $P$ is the subset of pending invocations in $H$ not completed when forming the linearization that yielded $v$. $R$ is the set of responses appended to $H$ to form $v$. Let *Poss(H)* denote the set of possibilities of $H$. The relationship between the set of possibilities and linearized values of $H$: $\forall <v, P, R>, v \in \it{Poss}(H), v \in \it{Lin}(H)$. 
+
+### Four Generic Axioms
+
+These axioms are used to derive a history's set of possibilities and its set of linearized values. Let $x$ be the object whose operation appears in $H$. The following *closure axiom* states that if $v$ is in $\it{Lin}(H)$ and $<\it{inv}\space A>$ is a pending invocation in $H$ that is not completed to form $v$ but could be completed with a response $< \it{res}\space A>$ to yield a legal value $v'$ for $x$ then $v'$ is also in $H'$. 
+
+*Axiom* C:​	$<v, P, R>\, \in \text{Poss}(H) \and <\text{inv}\space A> \, \in P \and \{x = v\} \text{inv/res} \{x = v'\}\\ \Rightarrow <v', P - \{\text{inv}\space A\}, R \cup \{\text{res}\space A\}> \, \in \text{Poss}(H)$ 
+
+The invocation axiom states that any linearization of $H$ is also a linearization of $H \cdot <\text{inv}\space A>$. 
+
+*Axiom* I: 	$<v, P, R> \in \text{Poss}(H) \\\Rightarrow <v, P \cup \{\text{inv}\space A\}, R>\,  \in \text{Poss}(H \cdot <\text{inv}\,A>)$   
+
+The response axiom states that any linearization of $H$ in which the pending $<\text{inv}\space A>$ is completed with $<\text{res}\space A>$ is also a linearization of $H \cdot <\text{res}\space A>$. 
+
+*Axiom* R: 	$<v, P, R> \, \in \text{Poss}(H) \and <\text{res}\space A>\,  \in R \\ \Rightarrow <v, P, R  - \{\text{res}\space A\}> \, \in \text{Poss}(H \cdot <\text{res}\space A>)$
+
+The initialization axiom states that the possibility for the initial value $v_0$ of an object corresponds to the empty history.
+
+*Axiom* S:	$\{<v_0, \empty, \empty>\} = \text{Poss}(H)$
+
+For each operation of a typed object, Axioms CIRS are used to develop type specific axioms. For a given history $H$ with $m$ events $\text{Poss}_i(H)$ is used to denote the set of possibilities for the *i*th prefix of $H$, for $0 \leq i \leq m$. A derivation shows that $<v, P, R>\,\in\text{Poss}_m(H)$ is a sequence of implications of the form:
+
+$<v_0, P_0, R_0>\,\in \text{Poss}_0(H)\\ \Rightarrow \ldots \\ \Rightarrow <v_j, P_j, R_j>\,\in\text{Poss}_k(H) \\\Rightarrow \ldots \\\Rightarrow <v_n, P_n, R_n> \,\in\text{Poss}_m(H)$
+
+where $v_n = v, P_n = P, R_n = R$ and reach implication is justified by Axiom C,I or R.  A derivation is like a history and each step is justified by an axiom. Furthermore the axioms CIRS are sound. 
+
+**Theorem**: *If there exists a derivation showing that $<v,P,R>$ is a possibility for $H$, then $v$ is a linearized value for $H$.* 
+
+Axioms CIRS are complete. 
+
+**Theorem**: *If $v \in \text{Lin}(H)$, then there exists a derivation that $<v, P,R>\,\in \text{Poss}(H)$*
+
+
+
+
 
