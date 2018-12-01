@@ -79,5 +79,16 @@ For proof facilitation given an operation $o$ of a process $p$ , the timestamp o
 *Proof*: Induction on the structure of the order $\rightsquigarrow$. There are three cases:
 
 * $o_1 \rightarrow_i  o_2$ for some $p_i$. SInce vector clocks are never decremented, $ts(o_1) \leq ts(o_2)$. Furthermore if $o_2$ is a write operation then $p_i$ increments its local component during $o_2$ so $ts(o_1)[i] < ts(o_2)[i]$. 
+* $o_1 \mapsto o_2$ implies $o_1$ is a write operation ($w_i(x)v$) whose write tuple has timestamp $ts(o_1)$.  It is clear from the implementation of memory that $p_j$ cannot read $v$ from $x$ before the write is applied to its memory. The process does not apply the write until its own clock is $\geq$ to $ts(o_1)$.  Since no component of the process's timestamp is ever decremented it is still $\geq ts(o_1)$ when it reads $v$ so that $ts(o_1)  \leq ts(o_2)$. 
+* There is an operation $o'$ such that $o_1 \rightsquigarrow o' \rightsquigarrow o_2$. By induction it implies that $ts(o_1) \leq ts(o') \leq ts(o_2)$. By the transitivity of $\leq$, the desired result also holds. If $o_2$ is a write by $p$ then $ts(o')[i] < ts(o_2)[i]$ by induction. Since $ts(o_1) \leq ts(o')$ implies $ts(o_1)[i] \leq ts(o')[i]$ we have $ts(o_1)[i] < ts(o_2)[i]$. 
 
+**Lemma**: *Let $H$ be a history of the implementation and suppose that $w$ is a write operation of process $p_i$. Then each process $p_j$ eventually applies $w$ to its memory.*
+
+*Proof*: If $i = j$ then the write is applied immediately. Assume that $i \neq j$. Let $s = ts(w)$. Based on the implementation, once $p_i$ has executed $w$ it is always true that one of the following cases holds for $w$'s write-tuple:
+
+*  in $p_i$'s outqueue.  
+*  in transit from $p_i$ to $p_j$
+* in $p_j$'s inqueue
+
+Since $p_i$ performs the send operation infinitely often and the outqueue if FIFO, the message will eventually be sent. Furthermore since channels are reliable the message will eventually be received and added to $p_j$'s inqueue. Finally showing that $p_j$ will eventually apply any write-tuple added to the inqueue. 
 

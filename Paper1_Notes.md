@@ -135,7 +135,7 @@ nodes being unaware when a message is lost. Some algorithms will return atomic
 data when all messages are delivered, and only will return inconsistent data
 when messages are lost. In the centralized alg, read requests are sent and if
 received, the node delivers the requested data or an ack. If no message is
-received by $2 \* t*{msg} + t*{local}$ then the node concludes the message was
+received by $2 * t*{msg} + t*{local}$ then the node concludes the message was
 lost. The client is sent a response : ack or data. Atomic consistency can be
 violated.
 
@@ -166,11 +166,7 @@ $\alpha$.
 4.   (Atomicity) If all messages in the execution are delivered, and 
       an operation $\theta$ completes before an operation $\phi$ begins, then
       $\phi$ does not precede $\theta$ in the partial order $P$.
-5.   (Weakly Consistent) Assume there exists an interval of time 
-    longer then $t$ in which no messages are lost. Further, assume an
-    operation $\theta$, completes before the interval begins and another 
-    operation $\phi$, begins after the interval ends. Then $\phi$ does not
-    precede $\theta$ in the partial order $P$.
+5.   (Weakly Consistent) Assume there exists an interval of time longer then $t$ in which no messages are lost. Further, assume an operation $\theta$, completes before the interval begins and another operation $\phi$, begins after the interval ends. Then $\phi$ does not precede $\theta$ in the partial order $P$.
 
 This provides for a time limit on how long the inconsistency can continue, up to when the partition heals (ie all messages are delivered). A variant of the centralized node is delayed-t consistent. Consider a centralized node $C$ and a secondary node $A$. The algorithm works as follows:
 
